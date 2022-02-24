@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from datetime import date
 import pandas_datareader as pdr
 from plotly import graph_objs as go
-from fbprophet import Prophet
 from fbprophet.plot import plot_plotly
 import sqlite3 
 from sklearn.preprocessing import MinMaxScaler
