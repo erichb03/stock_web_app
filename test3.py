@@ -11,9 +11,8 @@ from plotly import graph_objs as go
 from fbprophet.plot import plot_plotly
 import sqlite3 
 from sklearn.preprocessing import MinMaxScaler
-from keras.layers import Dense, Dropout, LSTM
-from keras.models import Sequential 
-
+from keras.models import load_model
+from tensorflow import keras
 
 #Create connection to database (automatically created when called)
 connection = sqlite3.connect('database.db')
@@ -39,7 +38,7 @@ def same_name(username):
 
 #Functions for database that stores favorite ticker from users
 def create_logbook():
-    cursorul.execute('CREATE TABLE IF NOT EXISTS favorites(username TEXT, ticker TEXT)')
+    cursorul.execute('CREATE TABLE IF NOT EXISTS favorites(id INTEGER PRIMARY KEY, username TEXT, ticker TEXT)')
 
 def add_tickers(username,ticker):
     cursorul.execute('INSERT INTO favorites(username,ticker) VALUES (?,?)',(username,ticker))
@@ -75,7 +74,8 @@ def distance_days(date1, date2):
 
 def main():
 #Sets the title of the web page
-    st.title('Stock Market Web Application - NEA Project')
+    st.subheader('Stock Market Web Application - NEA Project')
+    st.write(' ')
 
 #Create sidebarheader for user inputs
     st.sidebar.header('Input')
@@ -85,7 +85,16 @@ def main():
 #Create a drop-down menu of all the stocks 
     chosen_stock = st.sidebar.selectbox('Choose a stock', ['GOOG', 'MSFT', 'TSLA', 'LCID', 'VLTA', 'AAPL', 'CHPT'])
     stock_data = yf.download(chosen_stock, start_date, end_date)
+    stock_information = yf.Ticker(chosen_stock)
     stock_data.reset_index(inplace=True)
+
+#Show key information about each ticker
+    logo = '<img src=%s>' % stock_information.info['logo_url']
+    st.markdown(logo, unsafe_allow_html = True)
+    company = stock_information.info['longName']
+    st.header('**%s**' % company)
+    description = stock_information.info['longBusinessSummary']
+    st.info(description)
 
 #Plot graph with opening and closing prices
     fig = go.Figure()
@@ -95,6 +104,7 @@ def main():
     st.plotly_chart(fig)
 
 #Let user selected amount of time for prediction
+    st.header("Moving average")
     days = st.selectbox('How many days for the moving average?', [50, 100, 150, 200])
 
 #Predicting closing price
@@ -113,38 +123,9 @@ def main():
         testing = pd.DataFrame(data_frame['Close'][int(len(data_frame)*0.70): int(len(data_frame))])
 
         scaler = MinMaxScaler(feature_range=(0,1))
-        training_array = scaler.fit_transform(training)
 
-        x_train = []
-        y_train = []
-
-        for i in range(100, training_array.shape[0]):
-            x_train.append(training_array[i-100: i])
-            y_train.append(training_array[i, 0])
-
-        x_train, y_train = np.array(x_train), np.array(y_train)
-
-#Machine Learning Model
-        model = Sequential()
-        model.add(LSTM(units = 50, activation = 'relu', return_sequences = True,
-                      input_shape = (x_train.shape[1], 1)))
-        model.add(Dropout(0.2))
-
-        model.add(LSTM(units = 60, activation = 'relu', return_sequences = True,))
-        model.add(Dropout(0.3))
-
-        model.add(LSTM(units = 80, activation = 'relu', return_sequences = True,))
-        model.add(Dropout(0.4))
-
-        model.add(LSTM(units = 120, activation = 'relu',))
-        model.add(Dropout(0.5))
-
-        model.add(Dense(units = 1))
-
-        model.compile(optimizer='adam', loss = 'mean_squared_error')
-        model.fit(x_train, y_train, epochs = 50)
-
-        model.save('keras_model.h5')
+#Load Model
+        model = load_model('keras_model.h5')
 
         past_days = training.tail(100)
         df = past_days.append(testing, ignore_index = True)
@@ -161,20 +142,27 @@ def main():
         x_test, y_test = np.array(x_test), np.array(y_test)
         
 #Make actual prediction
-        y_prediction = model.predict(x_test)
-
+        prediction = model.predict(x_test)
+        y_prediction = scaler.inverse_transform(prediction)
+        y_test = y_test.reshape(-1,1)
+        y_test = scaler.inverse_transform(y_test)
+        
 #Plot prediction graph
+        last_30 = str(y_test.shape[0])
+        st.header("Expected value in the last {0} days vs. Actual value in the last {1} days".format(last_30,last_30))
         pre_graph = plt.figure(figsize=(12,6))
-        plt.plot(y_test, 'r', label = "Original price")
-        plt.plot(y_prediction, 'b', label = "Predicted price")
+        plt.plot(y_test, 'r', label = "Actual")
+        plt.plot(y_prediction, 'b', label = "Expected")
         plt.xlabel('Time in days')
-        plt.ylabel('Performance in Price')
-        st.write(testing.shape)
-        st.write(pre_graph)
-        st.write(y_test)
+        plt.ylabel('Price')
+        plt.legend()
+        st.pyplot(pre_graph)
 
 #Showcases raw data table 
-    st.write(stock_data)
+    st.text("All data from the first 5 days")
+    st.write(stock_data.head())
+    st.text("All data from the last 5 days")
+    st.write(stock_data.tail())
 
 #Deal with whitespace (field filled with only spaces or tabs)
 def ignore_whitespace(given):
@@ -185,12 +173,10 @@ def ignore_whitespace(given):
 #Create user registration 
 def login():
 
-     st.title("User Login")
      menu = ["Log-in","Sign-up"]
      choose = st.sidebar.selectbox("Menu", menu)
      
      if choose == "Log-in":
-        st.subheader("Enter username and password")
         name = st.sidebar.text_input("User-Name")
         password = st.sidebar.text_input("Password",type = 'password')
         if st.sidebar.checkbox("Log-in"):
@@ -211,18 +197,18 @@ def login():
                     already_chosen = same_ticker(name, stock)
                     if not st.button("Add ticker"):
                          table = view_favorite_stocks(name)
-                         show_table = pd.DataFrame({'ticker':table})
+                         show_table = pd.DataFrame(table, columns = ["Ticker"])
                          st.write(show_table)
                     else:
                          if already_chosen: 
                              st.warning("Ticker has already been choosen")
                              table = view_favorite_stocks(name)
-                             show_table = pd.DataFrame({'ticker':table})
+                             show_table = pd.DataFrame(table, columns = ["Ticker"])
                              st.write(show_table)
                          else:
                              add_tickers(name,stock)
                              table = view_favorite_stocks(name)
-                             show_table = pd.DataFrame({'ticker':table})
+                             show_table = pd.DataFrame(table, columns = ["Ticker"])
                              st.write(show_table)
                 elif task == "Delete from favorite tickers":
                     create_logbook()
@@ -230,33 +216,33 @@ def login():
                     already_chosen = same_ticker(name, stock)
                     if not st.button("Delete ticker"):
                          table = view_favorite_stocks(name)
-                         show_table = pd.DataFrame({'ticker':table})
+                         show_table = pd.DataFrame(table, columns = ["Ticker"])
                          st.write(show_table)
                     else:
                          if already_chosen: 
                              delete_ticker(name,stock)
                              table = view_favorite_stocks(name)
-                             show_table = pd.DataFrame({'ticker':table})
+                             show_table = pd.DataFrame(table, columns = ["Ticker"])
                              st.write(show_table)
                          else:
                              st.warning("The selected ticker is not on the list.")
                              table = view_favorite_stocks(name)
-                             show_table = pd.DataFrame({'ticker':table})
+                             show_table = pd.DataFrame(table, columns = ["Ticker"])
                              st.write(show_table)
                 elif task == "Order table alphabetically":            
                     create_logbook()
                     if st.button("Order from A to Z", key = "1"):
                         st.button("Order from Z to A", key = "3")
                         alpha_table = order_alphabetically(name)
-                        show_alpha_table = pd.DataFrame({'ticker':alpha_table})
+                        show_alpha_table = pd.DataFrame(alpha_table, columns = ['Ticker'])
                         st.write(show_alpha_table)
                     elif st.button("Order from Z to A", key = "3"):
                         realpha_table = order_alphabetically_reverse(name)
-                        show_realpha_table = pd.DataFrame({'ticker':realpha_table})
+                        show_realpha_table = pd.DataFrame(realpha_table, columns = ["Ticker"])
                         st.write(show_realpha_table)
                     else:
                         table = view_favorite_stocks(name)
-                        show_table = pd.DataFrame({'ticker':table})
+                        show_table = pd.DataFrame(table, columns = ["Ticker"])
                         st.write(show_table)
 
             else:
