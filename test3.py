@@ -3,12 +3,10 @@ import yfinance as yf
 import streamlit as st 
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt 
 from datetime import date
 import pandas_datareader as pdr
 from plotly import graph_objs as go
-from fbprophet.plot import plot_plotly
 import sqlite3 
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
