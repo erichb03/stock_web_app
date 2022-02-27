@@ -81,7 +81,8 @@ def main():
     end_date = st.sidebar.date_input("End Date", date(2021, 11, 20))
 
 #Create a drop-down menu of all the stocks 
-    chosen_stock = st.sidebar.selectbox('Choose a stock', ['GOOG', 'MSFT', 'TSLA', 'LCID', 'VLTA', 'AAPL', 'CHPT'])
+    chosen_stock = st.sidebar.selectbox('Choose a stock', ['GOOG', 'MSFT', 'TSLA', 'LCID', 
+                                                           'VLTA', 'AAPL', 'CHPT', 'WWE'])
     stock_data = yf.download(chosen_stock, start_date, end_date)
     stock_information = yf.Ticker(chosen_stock)
     stock_data.reset_index(inplace=True)
@@ -191,7 +192,8 @@ def login():
                 #Create favorite stocks section
                 if task == "Add to favorite tickers":
                     create_logbook()
-                    stock = st.selectbox('Choose a ticker',['GOOG', 'MSFT', 'TSLA', 'LCID', 'VLTA', 'AAPL', 'CHPT'])
+                    stock = st.selectbox('Choose a ticker',['GOOG', 'MSFT', 'TSLA', 'LCID', 
+                                                            'VLTA', 'AAPL', 'CHPT', 'WWE'])
                     already_chosen = same_ticker(name, stock)
                     if not st.button("Add ticker"):
                          table = view_favorite_stocks(name)
@@ -269,4 +271,4 @@ def login():
                  add_accounts(name_registered, password_registered)
                  st.success("Account created successfully")
 
-login()
+login()    
