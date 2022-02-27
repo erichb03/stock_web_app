@@ -1,7 +1,0 @@
-yfinance==0.1.67
-streamlit==1.2.0
-pandas-datareader==0.10.0
-plotly==5.4.0
-keras==2.8.0
-Keras-Preprocessing==1.1.2
-tensorflow==2.8.0
