@@ -285,11 +285,11 @@ def login():
              elif check_whitespace_name or check_whitespace_password:
                  st.warning("Two or more consecutive empty spaces are not allowed for username or password.")
 
-             elif not_real == "invalid" or already_used:
+             #elif not_real == "invalid" or already_used:
                  st.warning("The email you have entered is not valid or the email has already been used.")
 
              else:    
-                 add_accounts(name_registered, email_registered, password_registered)
+                 add_accounts(name_registered, password_registered)
                  st.success("Account created successfully")
 
 login()        
