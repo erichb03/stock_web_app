@@ -36,7 +36,7 @@ def same_name(username):
     return list
 
 def same_email(email):
-    cursorul.execute('SELECT email FROM accounts WHERE email =?',(email))
+    cursorul.execute('SELECT email FROM accounts WHERE email =?',(email,))
     list = cursorul.fetchall()
     return list 
 
