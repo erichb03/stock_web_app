@@ -19,24 +19,24 @@ cursorul = connection.cursor()
 
 #Functions for database with accounts
 def create_table():
-    cursorul.execute('CREATE TABLE accounts(username TEXT PRIMARY KEY , email TEXT, password TEXT)')
+    cursorul.execute('CREATE TABLE IF NOT EXISTS account(username TEXT PRIMARY KEY , email TEXT, password TEXT)')
 
 def add_accounts(username,email,password):
-    cursorul.execute('INSERT INTO accounts(username,email,password) VALUES (?,?,?)',(username,email,password))
+    cursorul.execute('INSERT INTO account(username,email,password) VALUES (?,?,?)',(username,email,password))
     connection.commit()
 
 def login_account(username,password):
-    cursorul.execute('SELECT * FROM accounts WHERE username =? and password = ?',(username,password))
+    cursorul.execute('SELECT * FROM account WHERE username =? and password = ?',(username,password))
     list = cursorul.fetchall()
     return list
 
 def same_name(username):
-    cursorul.execute('SELECT username FROM accounts WHERE username =?',(username,))
+    cursorul.execute('SELECT username FROM account WHERE username =?',(username,))
     list = cursorul.fetchall()
     return list
 
 def same_email(email):
-    cursorul.execute('SELECT email FROM accounts WHERE email =?',(email,))
+    cursorul.execute('SELECT email FROM account WHERE email =?',(email,))
     list = cursorul.fetchall()
     return list 
 
