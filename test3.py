@@ -11,6 +11,7 @@ import sqlite3
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 from tensorflow import keras
+import requests 
 
 #Create connection to database (automatically created when called)
 connection = sqlite3.connect('database.db')
@@ -18,10 +19,10 @@ cursorul = connection.cursor()
 
 #Functions for database with accounts
 def create_table():
-    cursorul.execute('CREATE TABLE IF NOT EXISTS accounts(username TEXT PRIMARY KEY , password TEXT)')
+    cursorul.execute('CREATE TABLE IF NOT EXISTS accounts(username TEXT PRIMARY KEY , email TEXT, password TEXT)')
 
-def add_accounts(username,password):
-    cursorul.execute('INSERT INTO accounts(username,password) VALUES (?,?)',(username,password))
+def add_accounts(username,email,password):
+    cursorul.execute('INSERT INTO accounts(username,email,password) VALUES (?,?,?)',(username,email,password))
     connection.commit()
 
 def login_account(username,password):
@@ -33,6 +34,11 @@ def same_name(username):
     cursorul.execute('SELECT username FROM accounts WHERE username =?',(username,))
     list = cursorul.fetchall()
     return list
+
+def same_email(email):
+    cursorul.execute('SELECT email FROM accounts WHERE email =?',(email,))
+    list = cursorul.fetchall()
+    return list 
 
 #Functions for database that stores favorite ticker from users
 def create_logbook():
@@ -66,6 +72,15 @@ def order_alphabetically_reverse(username):
     list = cursorul.fetchall()
     return list 
 
+#Check if the email actually exists
+def check_email(email_address):
+    response = requests.get("https://isitarealemail.com/api/email/validate",
+                             params = {'email': email_address})
+    
+    status = response.json()['status']
+    
+    return status
+       
 #Find distance between dates
 def distance_days(date1, date2):
     return (date2-date1).days
@@ -251,12 +266,15 @@ def login():
 
      elif choose == "Sign-up":
          st.subheader("Create account")
+         email_registered = st.text_input("Email")
          name_registered = st.text_input("Username")
          password_registered = st.text_input("Password",type = 'password')
 
          if st.button("Sign-up"):
              create_table()
+             not_real = check_email(email_registered)
              not_unique = same_name(name_registered)
+             already_used = same_email(email_registered)
              check_whitespace_name = ignore_whitespace(name_registered)
              check_whitespace_password = ignore_whitespace(password_registered)
 
@@ -267,8 +285,11 @@ def login():
              elif check_whitespace_name or check_whitespace_password:
                  st.warning("Two or more consecutive empty spaces are not allowed for username or password.")
 
+             elif not_real == "invalid" or already_used:
+                 st.warning("The email you have entered is not valid or the email has already been used.")
+
              else:    
-                 add_accounts(name_registered, password_registered)
+                 add_accounts(name_registered, email_registered, password_registered)
                  st.success("Account created successfully")
 
-login()    
+login()        
