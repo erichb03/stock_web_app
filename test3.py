@@ -19,7 +19,7 @@ cursorul = connection.cursor()
 
 #Functions for database with accounts
 def create_table():
-    cursorul.execute('CREATE TABLE IF NOT EXISTS accounts(username TEXT PRIMARY KEY , email TEXT, password TEXT)')
+    cursorul.execute('CREATE TABLE accounts(username TEXT PRIMARY KEY , email TEXT, password TEXT)')
 
 def add_accounts(username,email,password):
     cursorul.execute('INSERT INTO accounts(username,email,password) VALUES (?,?,?)',(username,email,password))
@@ -274,7 +274,7 @@ def login():
              create_table()
              not_real = check_email(email_registered)
              not_unique = same_name(name_registered)
-             #already_used = same_email(email_registered)
+             already_used = same_email(email_registered)
              check_whitespace_name = ignore_whitespace(name_registered)
              check_whitespace_password = ignore_whitespace(password_registered)
 
@@ -285,11 +285,11 @@ def login():
              elif check_whitespace_name or check_whitespace_password:
                  st.warning("Two or more consecutive empty spaces are not allowed for username or password.")
 
-             elif not_real == "invalid":
+             elif not_real == "invalid" or already_used:
                  st.warning("The email you have entered is not valid or the email has already been used.")
 
              else:    
                  add_accounts(name_registered, email_registered, password_registered)
                  st.success("Account created successfully")
 
-login() 
+login()        
