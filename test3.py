@@ -20,6 +20,7 @@ cursorul = connection.cursor()
 #Functions for database with accounts
 def create_table():
     cursorul.execute('CREATE TABLE IF NOT EXISTS account(username TEXT PRIMARY KEY , email TEXT, password TEXT)')
+    connection.commit()
 
 def add_accounts(username,email,password):
     cursorul.execute('INSERT INTO account(username,email,password) VALUES (?,?,?)',(username,email,password))
@@ -43,6 +44,7 @@ def same_email(email):
 #Functions for database that stores favorite ticker from users
 def create_logbook():
     cursorul.execute('CREATE TABLE IF NOT EXISTS favorites(id INTEGER PRIMARY KEY, username TEXT, ticker TEXT)')
+    connection.commit()
 
 def add_tickers(username,ticker):
     cursorul.execute('INSERT INTO favorites(username,ticker) VALUES (?,?)',(username,ticker))
