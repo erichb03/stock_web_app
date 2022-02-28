@@ -44,7 +44,7 @@ def same_email(email):
 #Functions for database that stores favorite ticker from users
 def create_logbook():
     cursorul.execute('CREATE TABLE IF NOT EXISTS favorites(id INTEGER PRIMARY KEY, username TEXT, ticker TEXT)')
-    connection.commit()
+    connection.commit
 
 def add_tickers(username,ticker):
     cursorul.execute('INSERT INTO favorites(username,ticker) VALUES (?,?)',(username,ticker))
