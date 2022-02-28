@@ -266,15 +266,15 @@ def login():
 
      elif choose == "Sign-up":
          st.subheader("Create account")
-         email_registered = st.text_input("Email")
+         #email_registered = st.text_input("Email")
          name_registered = st.text_input("Username")
          password_registered = st.text_input("Password",type = 'password')
 
          if st.button("Sign-up"):
              create_table()
-             not_real = check_email(email_registered)
+             #not_real = check_email(email_registered)
              not_unique = same_name(name_registered)
-             already_used = same_email(email_registered)
+             #already_used = same_email(email_registered)
              check_whitespace_name = ignore_whitespace(name_registered)
              check_whitespace_password = ignore_whitespace(password_registered)
 
