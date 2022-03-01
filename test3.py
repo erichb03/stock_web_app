@@ -13,7 +13,7 @@ from keras.models import load_model
 from tensorflow import keras
 import requests 
 
-#Create connection to database (automatically created when called)
+#Create connection to database 
 connection = sqlite3.connect('database.db')
 cursorul = connection.cursor()
 
@@ -49,7 +49,6 @@ def will_delete_later():
 #Functions for database that stores favorite ticker from users
 def create_logbook():
     cursorul.execute('CREATE TABLE IF NOT EXISTS favorites(id INTEGER PRIMARY KEY, username TEXT, ticker TEXT)')
-    connection.commit
 
 def add_tickers(username,ticker):
     cursorul.execute('INSERT INTO favorites(username,ticker) VALUES (?,?)',(username,ticker))
