@@ -52,6 +52,7 @@ def create_logbook():
 
 def add_tickers(username,ticker):
     cursorul.execute('INSERT INTO favorites(username,ticker) VALUES (?,?)',(username,ticker))
+    connection.commit()
 
 def view_favorite_stocks(username):
     cursorul.execute('SELECT ticker FROM favorites WHERE username =?',(username,))
@@ -65,6 +66,7 @@ def same_ticker(username,ticker):
 
 def delete_ticker(username,ticker):
     cursorul.execute('DELETE FROM favorites WHERE username =? and ticker=?',(username,ticker))
+    connection.commit()
 
 def order_alphabetically(username):
     cursorul.execute('SELECT ticker from favorites WHERE username =? ORDER BY ticker ASC',(username,))
