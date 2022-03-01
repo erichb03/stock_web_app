@@ -14,7 +14,7 @@ from tensorflow import keras
 import requests 
 
 #Create connection to database (automatically created when called)
-connection = sqlite3.connect(r"C:\Users\Erich\Desktop\github\stock_web_app\database.db")
+connection = sqlite3.connect('database.db')
 cursorul = connection.cursor()
 
 #Functions for database with accounts
@@ -40,6 +40,11 @@ def same_email(email):
     cursorul.execute('SELECT email FROM account WHERE email =?',(email,))
     list = cursorul.fetchall()
     return list 
+
+def will_delete_later():
+    cursorul.execute('SELECT * from account')
+    list = cursorul.fetchall()
+    return list
 
 #Functions for database that stores favorite ticker from users
 def create_logbook():
@@ -91,6 +96,9 @@ def main():
 #Sets the title of the web page
     st.subheader('Stock Market Web Application - NEA Project')
     st.write(' ')
+    test_delete = will_delete_later()
+    table_delete = pd.DataFrame(test_delete)
+    st.dataframe(table_delete)
 
 #Create sidebarheader for user inputs
     st.sidebar.header('Input')
