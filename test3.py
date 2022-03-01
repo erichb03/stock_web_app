@@ -14,7 +14,7 @@ from tensorflow import keras
 import requests 
 
 #Create connection to database (automatically created when called)
-connection = sqlite3.connect('C:\Users\Erich\Desktop\github\stock_web_app\database.db')
+connection = sqlite3.connect(r"C:\Users\Erich\Desktop\github\stock_web_app\database.db")
 cursorul = connection.cursor()
 
 #Functions for database with accounts
