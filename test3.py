@@ -12,9 +12,30 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 from tensorflow import keras
 import requests 
+import smtplib
+
+#Email sender function 
+def send_email():
+    email_name = "streamlitstockmarketapp@gmail.com"
+    email_password = "Arnewood98"
+    with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+        
+        smtp.login(email_name, email_password)
+
+        subject = 'Something'
+        body = 'yeah'
+
+        message = f'Subject: {subject}\n\n{body}'
+
+        smtp.sendmail(email_name, email_name, message)
+
+#send_email()
 
 #Create connection to database 
-connection = sqlite3.connect('database.db')
+connection = sqlite3.connect('sps.db')
 cursorul = connection.cursor()
 
 #Functions for database with accounts
@@ -196,7 +217,7 @@ def ignore_whitespace(given):
 #Create user registration 
 def login():
 
-     menu = ["Log-in","Sign-up"]
+     menu = ["Log-in","Sign-up","Restore username and password"]
      choose = st.sidebar.selectbox("Menu", menu)
      
      if choose == "Log-in":
@@ -300,5 +321,13 @@ def login():
              else:    
                  add_accounts(name_registered, email_registered, password_registered)
                  st.success("Account created successfully")
+
+     elif choose == "Restore username and password":
+         st.header("Enter the email used to create your account here:")
+         address = st.text_input("Email")
+         account_exists = same_email(address)
+
+         #if account_exists:
+
 
 login()        
