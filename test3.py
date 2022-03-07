@@ -13,11 +13,21 @@ from keras.models import load_model
 from tensorflow import keras
 import requests 
 import smtplib
+from email.message import EmailMessage
 
 #Email sender function 
-def send_email():
+def send_email(receiver, the_name, the_password):
     email_name = "streamlitstockmarketapp@gmail.com"
     email_password = "Arnewood98"
+    
+    message = EmailMessage()
+    message['Subject'] = 'Stock Prediction Web App account details:'
+    message['From'] = email_name
+    message['To'] = receiver
+
+    message.set_content("Account username: {0}\nAccount password: {1}".format(the_name, the_password))
+  
+  
     with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
         smtp.ehlo()
         smtp.starttls()
@@ -25,14 +35,7 @@ def send_email():
         
         smtp.login(email_name, email_password)
 
-        subject = 'Something'
-        body = 'yeah'
-
-        message = f'Subject: {subject}\n\n{body}'
-
-        smtp.sendmail(email_name, email_name, message)
-
-#send_email()
+        smtp.send_message(message)
 
 #Create connection to database 
 connection = sqlite3.connect('sps.db')
@@ -67,6 +70,18 @@ def will_delete_later():
     list = cursorul.fetchall()
     return list
 
+def get_password(email):
+    cursorul.execute('SELECT password FROM account WHERE email =?',(email,))
+    list = cursorul.fetchall()
+    for item in list:
+        return item[0]
+
+def get_name(email):
+    cursorul.execute('SELECT username FROM account WHERE email =?',(email,))
+    list = cursorul.fetchall()
+    for item in list:
+        return item[0]
+
 #Functions for database that stores favorite ticker from users
 def create_logbook():
     cursorul.execute('CREATE TABLE IF NOT EXISTS favorites(id INTEGER PRIMARY KEY, username TEXT, ticker TEXT)')
@@ -90,14 +105,19 @@ def delete_ticker(username,ticker):
     connection.commit()
 
 def order_alphabetically(username):
-    cursorul.execute('SELECT ticker from favorites WHERE username =? ORDER BY ticker ASC',(username,))
+    cursorul.execute('SELECT ticker FROM favorites WHERE username =? ORDER BY ticker ASC',(username,))
     list = cursorul.fetchall()
     return list 
 
 def order_alphabetically_reverse(username):
-    cursorul.execute('SELECT ticker from favorites WHERE username =? ORDER BY ticker DESC',(username,))
+    cursorul.execute('SELECT ticker FROM favorites WHERE username =? ORDER BY ticker DESC',(username,))
     list = cursorul.fetchall()
     return list 
+
+def popular_tickers():
+    cursorul.execute('SELECT ticker,count(*) FROM favorites GROUP BY ticker')
+    list = cursorul.fetchall()
+    return list
 
 #Check if the email actually exists
 def check_email(email_address):
@@ -116,9 +136,9 @@ def main():
 #Sets the title of the web page
     st.subheader('Stock Market Web Application - NEA Project')
     st.write(' ')
-    test_delete = will_delete_later()
-    table_delete = pd.DataFrame(test_delete)
-    st.dataframe(table_delete)
+    #test_delete = will_delete_later()
+    #table_delete = pd.DataFrame(test_delete)
+    #st.dataframe(table_delete)
 
 #Create sidebarheader for user inputs
     st.sidebar.header('Input')
@@ -151,9 +171,9 @@ def main():
     st.header("Moving average")
     days = st.selectbox('How many days for the moving average?', [50, 100, 150, 200])
 
-#Predicting closing price
     data_frame = stock_data[['Date','Close']]
     number = distance_days(start_date, end_date)
+#Check if the number of days is big enough for prediction
     if number < 300:
         st.warning("You need to choose a timeframe of at least 300 days for a prediction to be possible")
     else:
@@ -163,6 +183,7 @@ def main():
         plt.plot(ma, 'r')
         st.write(graph)
         
+#Split data into training (70%) and testing (30%)
         training = pd.DataFrame(data_frame['Close'][0:int(len(data_frame)*0.70)]) 
         testing = pd.DataFrame(data_frame['Close'][int(len(data_frame)*0.70): int(len(data_frame))])
 
@@ -194,6 +215,7 @@ def main():
 #Plot prediction graph
         last_30 = str(y_test.shape[0])
         st.header("Expected value in the last {0} days vs. Actual value in the last {1} days".format(last_30,last_30))
+        st.write("This prediction can be used in order to determine if a stock is overperforming, performing as expected or underperforming.")
         pre_graph = plt.figure(figsize=(12,6))
         plt.plot(y_test, 'r', label = "Actual")
         plt.plot(y_prediction, 'b', label = "Expected")
@@ -232,7 +254,10 @@ def login():
                 st.success("Logged in as {}".format(name))
                 main()
 
-                task = st.selectbox("Options",["Add to favorite tickers","Delete from favorite tickers","Order table alphabetically"])
+                task = st.selectbox("Options",["Add to favorite tickers",
+                                               "Delete from favorite tickers",
+                                               "Order table alphabetically",
+                                               "Show most popular tickers"])
 
                 #Create favorite stocks section
                 if task == "Add to favorite tickers":
@@ -289,7 +314,11 @@ def login():
                         table = view_favorite_stocks(name)
                         show_table = pd.DataFrame(table, columns = ["Ticker"])
                         st.write(show_table)
-
+                elif task == "Show most popular tickers":
+                    create_logbook()
+                    popularity = popular_tickers()
+                    show_popularity = pd.DataFrame(popularity)
+                    st.write(show_popularity)
             else:
                 st.warning("Incorrect username/password")        
           
@@ -326,8 +355,13 @@ def login():
          st.header("Enter the email used to create your account here:")
          address = st.text_input("Email")
          account_exists = same_email(address)
+         if st.button('Restore'):
+             if account_exists:
+                 name_send = get_name(address)
+                 password_send = get_password(address)
+                 send_email(address, name_send, password_send)
+             else:
+                 st.warning('There is no account registered on this email address')
+        
 
-         #if account_exists:
-
-
-login()        
+login()
